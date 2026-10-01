@@ -1,0 +1,1 @@
+﻿console.log("No $interpolation here $foo");
