@@ -1,14 +1,14 @@
 {
   "title": "SUNPULSE ENERGY SOLUTIONS - MASTER BUSINESS VAULT",
   "storage_file_version": "3.0",
-  "last_saved_at": "2026-10-01 13:46:44",
+  "last_saved_at": "2026-10-02 20:33:31",
   "statistics": {
     "total_sales_invoices": 1,
     "total_sales_amount": 88464.0,
     "total_taxable_sales": 77805.0,
-    "total_purchase_bills": 1,
-    "total_purchase_amount": 59000.0,
-    "total_taxable_purchases": 50000.0,
+    "total_purchase_bills": 0,
+    "total_purchase_amount": 0,
+    "total_taxable_purchases": 0,
     "total_parties": 13,
     "total_items": 12
   },
@@ -405,10 +405,10 @@
   ],
   "invoices": [
     {
-      "id": 15,
+      "id": 18,
       "invoice_number": "INV/2026/001",
       "invoice_type": "B2B",
-      "invoice_date": "2026-10-01",
+      "invoice_date": "2026-10-02",
       "due_date": null,
       "sales_person": "SUFIYAN SHAIKH",
       "party_id": null,
@@ -428,18 +428,18 @@
       "round_off": 0.16,
       "total_amount": 88464.0,
       "amount_in_words": "Eighty Eight Thousand Four Hundred Sixty Four Rupees Only",
-      "payment_status": "PARTIAL",
-      "amount_paid": 88444.0,
-      "balance_amount": 20.0,
+      "payment_status": "PAID",
+      "amount_paid": 88464.0,
+      "balance_amount": 0.0,
       "payment_mode": "UPI",
       "notes": "",
-      "created_at": "2026-10-01 07:41:14"
+      "created_at": "2026-10-02 14:33:58"
     }
   ],
   "invoice_items": [
     {
-      "id": 15,
-      "invoice_id": 15,
+      "id": 19,
+      "invoice_id": 18,
       "item_id": null,
       "item_name": "SUPPLY OF SOLAR ROOFTOP SYSTEM SET",
       "hsn_code": "85414300",
@@ -458,8 +458,8 @@
       "total": 27025.83
     },
     {
-      "id": 16,
-      "invoice_id": 15,
+      "id": 20,
+      "invoice_id": 18,
       "item_id": null,
       "item_name": "INSTALLATION AND COMISSIONING WORK",
       "hsn_code": "998719",
@@ -478,48 +478,21 @@
       "total": 61438.01
     }
   ],
-  "purchases": [
-    {
-      "id": 10,
-      "bill_number": "BILL-ADANI-2026-99",
-      "vendor_id": null,
-      "vendor_name": "Adani Solar Module Suppliers",
-      "vendor_gstin": "24AAACA1122B1Z3",
-      "bill_date": "2026-10-01",
-      "due_date": "",
-      "supply_type": "B2B",
-      "place_of_supply": "Purchased Goods/Services",
-      "is_interstate": 0,
-      "taxable_amount": 50000.0,
-      "cgst_amount": 4500.0,
-      "sgst_amount": 4500.0,
-      "igst_amount": 0.0,
-      "cess_amount": 0.0,
-      "total_amount": 59000.0,
-      "itc_eligibility": "ELIGIBLE",
-      "itc_claimed": 1,
-      "payment_status": "PAID",
-      "amount_paid": 59000.0,
-      "balance_amount": 0.0,
-      "document_file": "",
-      "notes": "",
-      "created_at": "2026-10-01 08:14:30"
-    }
-  ],
+  "purchases": [],
   "payments": [
     {
-      "id": 12,
+      "id": 15,
       "type": "RECEIVED",
       "reference_type": "SALES",
-      "reference_id": 15,
+      "reference_id": 18,
       "reference_number": "INV/2026/001",
       "party_name": "EARTHWAVE TECHNOLOGY PRIVATE LIMITED",
-      "amount": 88444.0,
-      "payment_date": "2026-10-01",
+      "amount": 88464.0,
+      "payment_date": "2026-10-02",
       "payment_mode": "UPI",
       "transaction_ref": null,
       "notes": "Initial payment on invoice creation",
-      "created_at": "2026-10-01 07:41:14"
+      "created_at": "2026-10-02 14:33:58"
     }
   ]
 }
