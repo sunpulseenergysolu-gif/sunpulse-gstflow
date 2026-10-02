@@ -54,7 +54,15 @@ app = FastAPI(title="GSTFlow - GST Invoicing & ITC Management API", version="2.1
 
 
 @app.middleware("http")
-async def add_no_cache_headers(request: Request, call_next):
+async def vercel_path_normalizer(request: Request, call_next):
+    path = request.scope.get("path", "")
+    for prefix in ["/api/index.py", "/api/index"]:
+        if path == prefix:
+            request.scope["path"] = "/"
+            break
+        elif path.startswith(prefix + "/"):
+            request.scope["path"] = path[len(prefix):]
+            break
     response = await call_next(request)
     if request.url.path.startswith("/api/"):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0, proxy-revalidate"
@@ -287,6 +295,10 @@ def build_period_label(
 # ----------------- ROOT & DASHBOARD -----------------
 
 @app.get("/", response_class=HTMLResponse)
+@app.get("/index.html", response_class=HTMLResponse)
+@app.get("/api/index.py", response_class=HTMLResponse)
+@app.get("/api/index", response_class=HTMLResponse)
+@app.get("/api", response_class=HTMLResponse)
 def serve_index():
     index_file = os.path.join(STATIC_DIR, "index.html")
     if os.path.exists(index_file):
