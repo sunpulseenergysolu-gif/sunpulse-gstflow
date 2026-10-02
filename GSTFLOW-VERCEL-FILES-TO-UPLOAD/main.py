@@ -55,14 +55,19 @@ app = FastAPI(title="GSTFlow - GST Invoicing & ITC Management API", version="2.1
 
 @app.middleware("http")
 async def vercel_path_normalizer(request: Request, call_next):
-    path = request.scope.get("path", "")
-    for prefix in ["/api/index.py", "/api/index"]:
-        if path == prefix:
-            request.scope["path"] = "/"
-            break
-        elif path.startswith(prefix + "/"):
-            request.scope["path"] = path[len(prefix):]
-            break
+    matched_path = request.headers.get("x-matched-path") or request.headers.get("x-forwarded-uri") or request.headers.get("x-original-uri")
+    if matched_path:
+        orig_path = matched_path.split("?")[0]
+        request.scope["path"] = orig_path
+    else:
+        path = request.scope.get("path", "")
+        for prefix in ["/api/index.py", "/api/index"]:
+            if path == prefix:
+                request.scope["path"] = "/"
+                break
+            elif path.startswith(prefix + "/"):
+                request.scope["path"] = path[len(prefix):]
+                break
     response = await call_next(request)
     if request.url.path.startswith("/api/"):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0, proxy-revalidate"
