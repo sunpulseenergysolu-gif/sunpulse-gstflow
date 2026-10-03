@@ -29,6 +29,10 @@ from src.excel_engine import (
     generate_ca_master_excel,
     generate_ca_zip_package
 )
+from src.gst_json_engine import (
+    generate_gstr1_json,
+    generate_gstr3b_json
+)
 from src.master_storage import (
     save_master_storage,
     auto_restore_from_master_file_if_needed,
@@ -55,20 +59,24 @@ app = FastAPI(title="GSTFlow - GST Invoicing & ITC Management API", version="2.1
 
 @app.middleware("http")
 async def vercel_path_normalizer(request: Request, call_next):
-    path = request.scope.get("path", "")
-    for prefix in ["/api/index.py", "/api/index"]:
-        if path == prefix:
-            request.scope["path"] = "/"
-            break
-        elif path.startswith(prefix + "/"):
-            request.scope["path"] = path[len(prefix):]
-            break
+    matched_path = request.headers.get("x-matched-path") or request.headers.get("x-forwarded-uri") or request.headers.get("x-original-uri")
+    if matched_path:
+        orig_path = matched_path.split("?")[0]
+        request.scope["path"] = orig_path
+    else:
+        path = request.scope.get("path", "")
+        for prefix in ["/api/index.py", "/api/index"]:
+            if path == prefix:
+                request.scope["path"] = "/"
+                break
+            elif path.startswith(prefix + "/"):
+                request.scope["path"] = path[len(prefix):]
+                break
     response = await call_next(request)
-    if request.url.path.startswith("/api/"):
-        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0, proxy-revalidate"
-        response.headers["Pragma"] = "no-cache"
-        response.headers["Expires"] = "0"
-        response.headers["Surrogate-Control"] = "no-store"
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0, proxy-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    response.headers["Surrogate-Control"] = "no-store"
     return response
 
 app.add_middleware(
@@ -132,6 +140,24 @@ class CreateInvoiceSchema(BaseModel):
     amount_paid: float = 0.0
     payment_mode: Optional[str] = "UPI"
     notes: Optional[str] = ""
+
+class CreatePurchaseBillSchema(BaseModel):
+    bill_number: Optional[str] = None
+    bill_date: str
+    due_date: Optional[str] = None
+    vendor_id: Optional[int] = None
+    vendor_name: str
+    vendor_gstin: Optional[str] = ""
+    supply_type: Optional[str] = "B2B"
+    place_of_supply: Optional[str] = ""
+    is_interstate: Optional[bool] = False
+    taxable_amount: Optional[float] = 0.0
+    gst_rate: Optional[float] = 18.0
+    itc_eligibility: Optional[str] = "ELIGIBLE"
+    payment_status: Optional[str] = "UNPAID"
+    amount_paid: Optional[float] = 0.0
+    notes: Optional[str] = ""
+    items: Optional[List[InvoiceItemSchema]] = []
 
 class PartySchema(BaseModel):
     name: str
@@ -296,9 +322,6 @@ def build_period_label(
 
 @app.get("/", response_class=HTMLResponse)
 @app.get("/index.html", response_class=HTMLResponse)
-@app.get("/api/index.py", response_class=HTMLResponse)
-@app.get("/api/index", response_class=HTMLResponse)
-@app.get("/api", response_class=HTMLResponse)
 def serve_index():
     index_file = os.path.join(STATIC_DIR, "index.html")
     if os.path.exists(index_file):
@@ -565,6 +588,11 @@ def create_invoice(payload: CreateInvoiceSchema):
         count = cursor.fetchone()[0] + 1
         inv_num = f"{prefix}{str(count).zfill(3)}"
 
+    # Ensure unique invoice number
+    cursor.execute("SELECT id FROM sales_invoices WHERE invoice_number = ?", (inv_num,))
+    if cursor.fetchone():
+        inv_num = f"{inv_num}-{uuid.uuid4().hex[:4].upper()}"
+
     # Determine Place of Supply & Inter-State
     buyer_state_code = (payload.party_state_code or "27").strip().zfill(2)
     is_interstate = (buyer_state_code != seller_state_code)
@@ -830,6 +858,78 @@ async def upload_purchase_bill(
     persist_json_mirror()
 
     return {"message": "Purchase bill recorded successfully with ITC tracking!", "bill_id": bill_id, "bill_number": bill_num}
+
+@app.post("/api/purchases")
+def create_purchase_bill_json(p: CreatePurchaseBillSchema):
+    conn = get_db()
+    cursor = conn.cursor()
+
+    bill_num = str(p.bill_number or "").strip()
+    if not bill_num:
+        cursor.execute("SELECT COUNT(*) FROM purchase_bills")
+        count = cursor.fetchone()[0] + 1
+        bill_num = f"BILL-{str(count).zfill(3)}"
+
+    taxable = float(p.taxable_amount or 0.0)
+    if p.items and len(p.items) > 0:
+        taxable = sum(float(item.quantity) * float(item.rate) for item in p.items)
+
+    gst_r = float(p.gst_rate or 18.0)
+    total_tax = (taxable * gst_r) / 100.0
+
+    if p.is_interstate:
+        cgst_amt = 0.0
+        sgst_amt = 0.0
+        igst_amt = round(total_tax, 2)
+    else:
+        cgst_amt = round(total_tax / 2.0, 2)
+        sgst_amt = round(total_tax / 2.0, 2)
+        igst_amt = 0.0
+
+    total_amount = round(taxable + cgst_amt + sgst_amt + igst_amt, 2)
+    paid = float(p.amount_paid or 0.0)
+    if paid >= total_amount:
+        pay_status = "PAID"
+        balance = 0.0
+    elif paid > 0:
+        pay_status = "PARTIAL"
+        balance = round(total_amount - paid, 2)
+    else:
+        pay_status = p.payment_status or "UNPAID"
+        balance = total_amount
+
+    cursor.execute('''
+    INSERT INTO purchase_bills (
+        bill_number, vendor_id, vendor_name, vendor_gstin, bill_date, due_date,
+        supply_type, place_of_supply, is_interstate, taxable_amount, cgst_amount,
+        sgst_amount, igst_amount, cess_amount, total_amount, itc_eligibility,
+        payment_status, amount_paid, balance_amount, notes
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        bill_num, p.vendor_id, p.vendor_name, p.vendor_gstin, p.bill_date, p.due_date,
+        p.supply_type or 'B2B', p.place_of_supply, 1 if p.is_interstate else 0,
+        taxable, cgst_amt, sgst_amt, igst_amt, 0.0, total_amount,
+        p.itc_eligibility or 'ELIGIBLE', pay_status, paid, balance, p.notes
+    ))
+    bill_id = cursor.lastrowid
+
+    if p.items:
+        for it in p.items:
+            t_val = float(it.quantity) * float(it.rate)
+            t_amt = (t_val * float(it.gst_rate)) / 100.0
+            tot = t_val + t_amt
+            c_amt = 0.0 if p.is_interstate else round(t_amt / 2.0, 2)
+            s_amt = 0.0 if p.is_interstate else round(t_amt / 2.0, 2)
+            i_amt = round(t_amt, 2) if p.is_interstate else 0.0
+            cursor.execute('''
+            INSERT INTO purchase_bill_items (bill_id, item_name, hsn_code, quantity, uom, rate, taxable_value, gst_rate, cgst_amount, sgst_amount, igst_amount, total)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (bill_id, it.item_name, it.hsn_code, it.quantity, it.uom, it.rate, t_val, it.gst_rate, c_amt, s_amt, i_amt, tot))
+
+    conn.commit()
+    conn.close()
+    persist_json_mirror()
+    return {"message": "Purchase bill recorded successfully!", "bill_id": bill_id, "bill_number": bill_num, "taxable_amount": taxable, "total_amount": total_amount}
 
 @app.get("/api/purchases/{bill_id}")
 def get_purchase_bill_detail(bill_id: int):
