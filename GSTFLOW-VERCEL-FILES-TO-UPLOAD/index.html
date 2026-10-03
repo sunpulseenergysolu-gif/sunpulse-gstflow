@@ -3,9 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="manifest" href="/static/manifest.json" />
-  <meta name="theme-color" content="#0c2340" />
-  <title>SunPulse GSTFlow - Tally Prime Edition & GST Portal Engine</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <script>
+    // Permanent Lock Screen Destroyer & Direct Access
+    try {
+      localStorage.setItem("gstflow_is_locked", "false");
+      localStorage.setItem("gstflow_user_role", "ADMIN");
+      localStorage.setItem("gstflow_username", "admin");
+    } catch(e) {}
+    
+    // Immediately hide or remove any cached lock modal if present
+    document.addEventListener("DOMContentLoaded", function() {
+      const modal = document.getElementById("screenLockModal");
+      if (modal) modal.remove();
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          for (let r of regs) r.unregister();
+        });
+      }
+    });
+  </script>
   
   <!-- Preconnect and High Definition Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
