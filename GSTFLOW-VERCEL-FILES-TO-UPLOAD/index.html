@@ -143,9 +143,7 @@
         <span id="sidebarUsername" class="text-slate-500 font-mono text-[10px]">admin</span>
       </div>
 
-      <button onclick="lockScreen()" class="w-full mt-2.5 flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-rose-400 hover:text-rose-300 text-xs font-semibold border border-rose-500/20 transition shadow-sm">
-        <i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock Screen
-      </button>
+      
     </div>
   </aside>
 
@@ -199,9 +197,7 @@
         </button>
 
         <!-- Lock Screen -->
-        <button onclick="lockScreen()" title="Lock Screen" class="flex items-center gap-1 p-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-rose-950 text-slate-300 hover:text-rose-300 border border-slate-700 transition">
-          <i data-lucide="lock" class="w-4 h-4 text-rose-400"></i>
-        </button>
+        
 
         <!-- Refresh -->
         <button onclick="refreshCurrentTab()" title="Refresh Data" class="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition border border-slate-700">
@@ -2049,112 +2045,6 @@
     </div>
   </div>
 
-  <!-- ================= EXECUTIVE FULL-SCREEN SECURITY LOCK OVERLAY ================= -->
-  <div id="screenLockModal" class="fixed inset-0 z-[9999] bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex items-center justify-center p-4 select-none backdrop-blur-xl transition-all duration-300">
-    <div class="w-full max-w-md bg-slate-900/90 border border-slate-700/80 rounded-3xl p-8 shadow-2xl shadow-sky-950/50 text-white flex flex-col items-center space-y-6 relative overflow-hidden">
-      
-      <!-- Top Decorative Ambient Glow -->
-      <div class="absolute -top-24 -left-24 w-48 h-48 bg-sky-500/20 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
-
-      <!-- Live Clock & Date -->
-      <div class="text-center space-y-1">
-        <div id="lockLiveTime" class="text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-300 font-mono">12:00:00 PM</div>
-        <div id="lockLiveDate" class="text-xs text-slate-400 font-medium">Tuesday, 22 September 2026</div>
-      </div>
-
-      <!-- Branding / Logo -->
-      <div class="flex flex-col items-center space-y-2">
-        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-500 via-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-sky-500/25 border border-sky-400/30">
-          <i data-lucide="shield-alert" class="w-7 h-7 text-white"></i>
-        </div>
-        <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-          GSTFlow <span class="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 font-semibold tracking-wider uppercase">LOCKED</span>
-        </h2>
-        <p class="text-xs text-slate-400 text-center max-w-xs">Security Screen Lock is active. Please authenticate to access billing & tax data.</p>
-      </div>
-
-      <!-- Auth Mode Switcher (Password / Quick PIN) -->
-      <div class="w-full flex rounded-xl bg-slate-950/80 p-1 border border-slate-800">
-        <button type="button" onclick="setLockAuthMode('password')" id="btnAuthModePass" class="flex-1 py-1.5 rounded-lg text-xs font-semibold text-white bg-sky-600/30 border border-sky-500/40 transition">
-          Password Login
-        </button>
-        <button type="button" onclick="setLockAuthMode('pin')" id="btnAuthModePin" class="flex-1 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition">
-          Quick PIN (4-Digit)
-        </button>
-      </div>
-
-            <!-- Security Lockout Live Countdown Banner -->
-      <div id="lockoutTimerBanner" class="hidden w-full p-4 rounded-2xl bg-rose-950/90 border border-rose-500/70 text-center space-y-1.5 shadow-xl shadow-rose-950/60">
-        <div class="text-xs font-bold text-rose-300 flex items-center justify-center gap-1.5">
-          <i data-lucide="shield-alert" class="w-4 h-4 text-rose-400 animate-pulse"></i>
-          <span class="tracking-wider uppercase">SECURITY LOCKOUT ACTIVE</span>
-        </div>
-        <div id="lockoutCountdownText" class="text-3xl font-black text-white font-mono tracking-widest text-rose-300">00:30</div>
-        <p id="lockoutNoticeText" class="text-[11px] text-rose-200/90 font-medium">Too many failed attempts. Login is temporarily blocked.</p>
-      </div>
-
-      <!-- Error Message Box -->
-      <div id="lockErrorMsg" class="hidden w-full p-3 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2 font-medium">
-        <i data-lucide="alert-circle" class="w-4 h-4 shrink-0 text-rose-400"></i>
-        <span id="lockErrorText">Invalid credentials. Please try again.</span>
-      </div>
-
-      <!-- Login Form -->
-      <form id="screenLockForm" onsubmit="handleUnlockSubmit(event)" class="w-full space-y-4">
-        
-        <!-- Mode 1: Username & Password Inputs -->
-        <div id="lockPasswordInputs" class="space-y-3">
-          <div>
-            <label class="block text-[11px] font-semibold text-slate-300 mb-1">Username</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <i data-lucide="user" class="w-4 h-4"></i>
-              </span>
-              <input type="text" id="lockUsername" value="admin" placeholder="Enter username" class="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-950/80 border border-slate-700/80 text-white text-xs placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500" />
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-[11px] font-semibold text-slate-300 mb-1">Password</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <i data-lucide="key" class="w-4 h-4"></i>
-              </span>
-              <input type="password" id="lockPassword" placeholder="Enter password" class="w-full pl-9 pr-10 py-2.5 rounded-xl bg-slate-950/80 border border-slate-700/80 text-white text-xs placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500" />
-              <button type="button" onclick="togglePasswordVisibility('lockPassword')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white">
-                <i data-lucide="eye" class="w-4 h-4"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Mode 2: Quick PIN Input -->
-        <div id="lockPinInputs" class="hidden space-y-2">
-          <label class="block text-center text-xs font-semibold text-slate-300">Enter 4-Digit Security PIN</label>
-          <input type="password" id="lockPinInput" maxlength="6" placeholder="• • • •" class="w-full text-center text-2xl tracking-[0.5em] py-2.5 rounded-xl bg-slate-950/80 border border-slate-700/80 text-white placeholder-slate-600 font-mono focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500" />
-        </div>
-
-        <!-- Unlock Button -->
-        <button type="submit" id="btnUnlockApp" class="w-full py-3 rounded-xl bg-gradient-to-r from-sky-600 via-indigo-600 to-purple-600 hover:from-sky-500 hover:to-purple-500 text-white text-xs font-bold shadow-lg shadow-sky-600/30 transition transform active:scale-98 flex items-center justify-center gap-2">
-          <i data-lucide="unlock" class="w-4 h-4"></i> Unlock Application
-        </button>
-
-        <!-- Direct 1-Click Fast Unlock -->
-        <button type="button" onclick="direct1ClickUnlock()" class="w-full py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-300 hover:text-white text-[11px] font-semibold transition flex items-center justify-center gap-1.5">
-          <span>⚡ 1-Click Quick Unlock (Owner)</span>
-        </button>
-      </form>
-
-      <!-- Security System Badge -->
-      <div class="text-center text-[11px] text-slate-400 border-t border-slate-800/80 pt-3 w-full flex items-center justify-between">
-        <span class="flex items-center gap-1 text-slate-400"><i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i> Brute-Force Protected</span>
-        <span class="text-[10px] text-slate-400 font-mono">SunPulse Security Engine v2.4</span>
-      </div>
-    </div>
-  </div>
-
-
   <!-- ================= TALLY PRIME "GO TO" MASTER NAVIGATOR MODAL (Alt+G) ================= -->
   <div id="tallyGoToModal" class="fixed inset-0 z-[9990] bg-slate-950/70 backdrop-blur-sm hidden items-start justify-center pt-20 p-4 select-none transition-all" style="display: none;">
     <div class="w-full max-w-xl bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl overflow-hidden text-white flex flex-col">
@@ -2181,159 +2071,25 @@
   </div>
 
   
+  
   <script>
-    // Inline Self-Contained Lock Screen & Authentication Engine
-    let currentLockAuthMode = 'password';
+    // Direct Access Initializer - No Lock Screen
+    window.currentUserRole = "ADMIN";
+    window.currentUsername = "admin";
+    window.currentUserDisplayName = "Business Owner / Admin";
 
-    function setLockAuthMode(mode) {
-      currentLockAuthMode = mode;
-      const btnPass = document.getElementById("btnAuthModePass");
-      const btnPin = document.getElementById("btnAuthModePin");
-      const passInputs = document.getElementById("lockPasswordInputs");
-      const pinInputs = document.getElementById("lockPinInputs");
-      const errBox = document.getElementById("lockErrorMsg");
-
-      if (errBox) errBox.classList.add("hidden");
-
-      if (mode === "pin") {
-        if (btnPass) {
-          btnPass.className = "flex-1 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition";
-        }
-        if (btnPin) {
-          btnPin.className = "flex-1 py-1.5 rounded-lg text-xs font-semibold text-white bg-sky-600/30 border border-sky-500/40 transition";
-        }
-        if (passInputs) passInputs.classList.add("hidden");
-        if (pinInputs) {
-          pinInputs.classList.remove("hidden");
-          const pinField = document.getElementById("lockPinInput");
-          if (pinField) {
-            pinField.value = "";
-            setTimeout(() => pinField.focus(), 50);
-          }
-        }
-      } else {
-        if (btnPin) {
-          btnPin.className = "flex-1 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition";
-        }
-        if (btnPass) {
-          btnPass.className = "flex-1 py-1.5 rounded-lg text-xs font-semibold text-white bg-sky-600/30 border border-sky-500/40 transition";
-        }
-        if (pinInputs) pinInputs.classList.add("hidden");
-        if (passInputs) {
-          passInputs.classList.remove("hidden");
-          const passField = document.getElementById("lockPassword");
-          if (passField) {
-            passField.value = "";
-            setTimeout(() => passField.focus(), 50);
-          }
-        }
-      }
+    function lockScreen() {
+      // Disabled - Direct Access Active
+      console.log("Direct access active - lock screen disabled.");
     }
 
-    function togglePasswordVisibility(id) {
-      const input = document.getElementById(id);
-      if (input) {
-        input.type = input.type === "password" ? "text" : "password";
-      }
-    }
-
-    function unlockApplicationUI(role, username, displayName) {
-      const modal = document.getElementById("screenLockModal");
-      if (modal) {
-        modal.style.opacity = "0";
-        modal.style.transition = "opacity 0.3s ease";
-        setTimeout(() => {
-          modal.classList.add("hidden");
-          modal.classList.remove("flex");
-          modal.style.display = "none";
-        }, 300);
-      }
-      try {
-        localStorage.setItem("gstflow_user_role", role || "ADMIN");
-        localStorage.setItem("gstflow_username", username || "admin");
-        localStorage.setItem("gstflow_is_locked", "false");
-      } catch(e) {}
-      if (typeof applyUserRolePermissions === "function") {
-        applyUserRolePermissions();
-      }
-      if (typeof showToastNotification === "function") {
-        showToastNotification("✓ Welcome back, " + (displayName || "Admin"));
-      }
-    }
-
-    function handleUnlockSubmit(event) {
-      if (event) event.preventDefault();
-      
-      const pinField = document.getElementById("lockPinInput");
-      const userField = document.getElementById("lockUsername");
-      const passField = document.getElementById("lockPassword");
-      const errBox = document.getElementById("lockErrorMsg");
-      const errText = document.getElementById("lockErrorText");
-
-      let pin = pinField ? pinField.value.trim() : "";
-      let user = userField ? userField.value.trim() : "";
-      let pass = passField ? passField.value.trim() : "";
-
-      if (currentLockAuthMode === "pin") {
-        if (pin === "1234" || pin === "admin") {
-          unlockApplicationUI("ADMIN", "admin", "Business Owner / Admin");
-          return;
-        } else if (pin === "4321" || pin === "ca") {
-          unlockApplicationUI("CA", "ca_audit", "Chartered Accountant / Auditor");
-          return;
-        } else if (pin.length > 0) {
-          // Allow any 4-digit master pin or standard PIN
-          unlockApplicationUI("ADMIN", "admin", "Business Owner / Admin");
-          return;
-        } else {
-          if (errBox && errText) {
-            errText.innerText = "Please enter 4-digit PIN (1234)";
-            errBox.classList.remove("hidden");
-          }
-          return;
-        }
-      } else {
-        if ((user.toLowerCase() === "admin" && (pass === "admin123" || pass === "admin" || pass === "")) || pass === "1234") {
-          unlockApplicationUI("ADMIN", "admin", "Business Owner / Admin");
-          return;
-        } else if (user.toLowerCase() === "ca_audit" && (pass === "ca123" || pass === "ca")) {
-          unlockApplicationUI("CA", "ca_audit", "Chartered Accountant / Auditor");
-          return;
-        } else {
-          unlockApplicationUI("ADMIN", "admin", "Business Owner / Admin");
-          return;
-        }
-      }
-    }
-
-    function direct1ClickUnlock() {
-      unlockApplicationUI("ADMIN", "admin", "Business Owner / Admin");
-    }
-
-    // Auto-update clock
-    setInterval(() => {
-      const timeEl = document.getElementById("lockLiveTime");
-      const dateEl = document.getElementById("lockLiveDate");
-      const now = new Date();
-      if (timeEl) timeEl.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-      if (dateEl) dateEl.innerText = now.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    }, 1000);
-
-    // Auto PIN unlock on input
-    document.addEventListener("DOMContentLoaded", () => {
-      const pinInput = document.getElementById("lockPinInput");
-      if (pinInput) {
-        pinInput.addEventListener("input", (e) => {
-          if (e.target.value.trim().length >= 4) {
-            handleUnlockSubmit();
-          }
-        });
-      }
-      setLockAuthMode("pin");
-    });
+    function setLockAuthMode() {}
+    function handleUnlockSubmit() {}
+    function direct1ClickUnlock() {}
   </script>
 
-  <script src="/static/app.js?v=4.0"></script>
+
+  <script src="/static/app.js?v=5.0"></script>
 </body>
 </html>
 
